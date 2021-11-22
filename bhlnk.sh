@@ -197,6 +197,8 @@ echo ""
 	sudo chmod 644 "$dir/temp/system/system/app/miui/miui.apk"
 	sudo chown root "$dir/temp/system/system/app/miui/miui.apk"
 	sudo chgrp root "$dir/temp/system/system/app/miui/miui.apk"
+        #allow update system app
+        echo "persist.sys.allow_sys_app_update=true" >> "$dir/temp/system/system/build.prop"
 	echo "Adding Roboto Fonts"
 	sudo cp -arf fonts_f/system/fonts/. $dir/temp/system/system/fonts
 	echo "Adding Crack Theme from https://yukongya.herokuapp.com"
