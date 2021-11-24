@@ -18,19 +18,6 @@ getszie()
 	part_size[0]=$(find "system.img" -printf "%s")
 	part_size[1]=$(find "vendor.img" -printf "%s")
 }
-super()
-{
-echo "#############################"
-echo "#     Unpack Super.img .... #"
-echo "#############################"
-echo ""
-echo "Convert sparse images to raw images ...."
-echo ""
-simg2img super.img raw.img
-echo "Unpack super parttion ...."
-echo ""
-./bin/lpunpack raw.img
-}
 zipfile()
 {
 echo "#############################"
@@ -41,7 +28,7 @@ echo "#############################"
 	unzip -t $input
 	unzip $input -d zip_temp
 	for ((i = 0 ; i < 2 ; i++)); do
-		./bin/brotli --decompress zip_temp/"${part[$i]}.new.dat.br" -o zip_temp/"${part[$i]}.new.dat"
+		brotli --decompress zip_temp/"${part[$i]}.new.dat.br" -o zip_temp/"${part[$i]}.new.dat"
 		python3 ./bin/sdat2img.py zip_temp/"${part[$i]}.transfer.list" zip_temp/"${part[$i]}.new.dat" "${part[$i]}.img"
 		echo "extract "${part[$i]}.img" : done"
 	done
