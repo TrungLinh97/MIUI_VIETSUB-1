@@ -26,7 +26,7 @@ echo "#############################"
 echo ""
 echo "Convert sparse images to raw images ...."
 echo ""
-./bin/simg2img super.img raw.img
+simg2img super.img raw.img
 echo "Unpack super parttion ...."
 echo ""
 ./bin/lpunpack raw.img
@@ -257,7 +257,7 @@ echo "Compress to brotli .... "
 #
 for ((i = 0 ; i < 2 ; i++)); do
    	echo "- Repack ${part[$i]}.new.dat"
-	$bin/brotli -6 -j -w 24 "$bro/${part[$i]}.new.dat" -o "$bro/${part[$i]}.new.dat.br"
+	brotli -6 -j -w 24 "$bro/${part[$i]}.new.dat" -o "$bro/${part[$i]}.new.dat.br"
 	rm -rf "${part[$i]}.img"
 	rm -rf "s_${part[$i]}.img"
 	rm -rf "$bro/${part[$i]}.new.dat"
@@ -265,13 +265,9 @@ done
 if [ -d $bro/META-INF ]; then
 	echo "- Zipping"
 	cp "$dir/bin/vbmeta.img" $bro
-	[ -f ./"vietsub_$input" ] && rm -rf ./"vietsub_$input"
-  for file in $bro; do
-  ( cd "$file" && zip -r ../"vietsub_$input" . )
-  done
+	[ -f ./MIUI_VIETSUB.zip ] && rm -rf ./MIUI_VIETSUB.zip
+	$bin/7za a -tzip "$dir/MIUI_VIETSUB.zip" $bro/*  
 fi
-
-
 if [ -f "$dir/MIUI_VIETSUB.zip" ]; then
       echo "- Repack done"
 else
