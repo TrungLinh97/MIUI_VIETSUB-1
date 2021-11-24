@@ -24,7 +24,11 @@ data-app/MIUIXiaoAiSpeechEngine
 data-app/MIUIYoupin
 data-app/ThirdAppAssistant
 data-app/VirtualSim
+data-app/MIUICleanMaster
+app/SogouInput
+app/MIUISecurityInputMethod
 app/Joyose
+app/PowerKeeper
 app/MIpay
 app/MiPlayClient
 app/MiuiBugReport
@@ -32,6 +36,9 @@ app/NextPay
 app/UPTsmService
 app/VoiceAssist
 app/VoiceTrigger
+app/MiService
 priv-app/MIUIBrowser
 priv-app/MIUIQuickSearchBox
 priv-app/MIUIYellowPage
+priv-app/MIService
+bin/logd

@@ -1,5 +1,6 @@
 #!/bin/bash
 part=(system vendor)
+module=(vietsub fonts theme)
 dir=$(pwd)
 bin="$dir/bin/linux"
 bro="$dir/zip_temp"
@@ -79,15 +80,14 @@ done
 ##########
 mount()
 {
-clear
 echo "#############################"
 echo "#        Mounting ....     #"
 echo "#############################"
 echo ""
 echo "Enter your password to use Sudo ...."
 for ((i = 0 ; i < 2 ; i++)); do
-	mkdir temp/"${part[$i]}" 
-	sudo mount "${part[$i]}.img" temp/"${part[$i]}" 
+	mkdir temp/"${part[$i]}"
+	sudo mount "${part[$i]}.img" temp/"${part[$i]}"
 done
 }
 ########
@@ -132,7 +132,7 @@ for ((i = 0 ; i < 2 ; i++)); do
 done
 }
 ##########
-shrink () 
+shrink ()
 {
 echo "#############################"
 echo "#        Shrinking ....     #"
@@ -144,6 +144,11 @@ for ((i = 0 ; i < 2 ; i++)); do
 	resize2fs -f -M "${part[$i]}.img"
 	echo "Shrink "${part[$i]}" :  done"
 done
+echo "Expan system size for gboard .... "
+cd $dir
+e2fsck -f system.img -y
+dd if=/dev/zero bs=1M count=200 >> system.img
+resize2fs system.img
 getszie
 if [[ -f "$bro/dynamic_partitions_op_list" ]]; then
 	for ((i = 0 ; i < 2 ; i++)); do
@@ -171,11 +176,18 @@ rm firmware-update/vbmeta.img
 		if [[ -f "${part[$i]}.new.dat.br" ]]; then
 			rm "${part[$i]}.new.dat.br"
 			rm "${part[$i]}.new.dat"
-			rm "${part[$i]}.patch.dat" 
+			rm "${part[$i]}.patch.dat"
 			rm "${part[$i]}.transfer.list"
 		fi
 	done
 cd ..
+}
+permis()
+{
+  sudo chmod 644 $1
+  sudo chown root $1
+  sudo chgrp root $1
+  echo "Set permission of $1 : done "
 }
 vietsub()
 {
@@ -185,42 +197,54 @@ echo "#############################"
 echo ""
 	cd $dir/module
 	echo "copy bhlnk's overlay and stuff"
-	mkdir vietsub_f
-	mkdir fonts_f
-	mkdir theme_f
-	sudo mount vietsub.img vietsub_f
-	sudo mount fonts.img fonts_f
-	sudo mount crack_theme.img theme_f
+for ((i = 0 ; i < 3 ; i++)); do
+	mkdir "${module[$i]}_f"
+	sudo mount "${module[$i]}.img" "${module[$i]}_f"
+done
 	echo "Adding Vietnamese Language"
 	sudo cp -arf vietsub_f/overlay/. $dir/temp/vendor/overlay
+  sudo cp -rf "thermal-normal.conf" $dir/temp/vendor/etc
+  permis "$dir/temp/vendor/etc/thermal-normal.conf"
 	sudo cp -rf "miui.apk" $dir/temp/system/system/app/miui
-	sudo chmod 644 "$dir/temp/system/system/app/miui/miui.apk"
-	sudo chown root "$dir/temp/system/system/app/miui/miui.apk"
-	sudo chgrp root "$dir/temp/system/system/app/miui/miui.apk"
-        #allow update system app
-        echo "persist.sys.allow_sys_app_update=true" >> "$dir/temp/system/system/build.prop"
+	permis "$dir/temp/system/system/app/miui/miui.apk"
 	echo "Adding Roboto Fonts"
 	sudo cp -arf fonts_f/system/fonts/. $dir/temp/system/system/fonts
 	echo "Adding Crack Theme from https://yukongya.herokuapp.com"
 	sudo cp -arf theme_f/system/app/MIUIThemeManager/. $dir/temp/system/system/app/MIUIThemeManager
 	echo "done"
-	sudo umount vietsub_f
-	sudo umount fonts_f
-	sudo umount theme_f
+
+  for ((i = 0 ; i < 3 ; i++)); do
+  	sudo umount "${module[$i]}_f"
+  	rm -rf "${module[$i]}_f"
+  done
 	cd $dir
-
-
+}
+buildprop()
+{
+cd $dir/temp
+cd system/system
+sudo sed -i '/ro.product.locale/c\ro.product.locale=vi-VN' build.prop
+sudo sed -i '/ro.miui.has_security_keyboard/c\ro.miui.has_security_keyboard=0' build.prop
+sudo sed -i '$ a ro.miui.backdrop_sampling_enabled=true' build.prop
+sudo sed -i '$ a persist.sys.allow_sys_app_update=true' build.prop
+cd $dir/temp
+cd vendor
+sudo sed -i '/ro.vendor.cabc.enable/c\ro.vendor.cabc.enable=false' build.prop
+sudo sed -i '/ro.vendor.bcbc.enable/c\ro.vendor.bcbc.enable=false' build.prop
+sudo sed -i '/ro.vendor.dfps.enable/c\ro.vendor.dfps.enable=false' build.prop
+sudo sed -i '/ro.vendor.smart_dfps.enable/c\ro.vendor.smart_dfps.enable=false' build.prop
+sudo sed -i '$ a persist.sys.allow_sys_app_update=true' build.prop
 }
 repackz()
 {
-clear
 echo "#############################"
 echo "#         Compress          #"
 echo "#############################"
 echo ""
 echo "Compress to sparse img .... "
 for ((i = 0 ; i < 2 ; i++)); do
-	./bin/img2simg "${part[$i]}.img" "s_${part[$i]}.img" 2>/dev/null
+  echo "Compress "${part[$i]}.img" "
+	img2simg "${part[$i]}.img" "s_${part[$i]}.img"
 done
 echo "Compress to new.dat .... "
 for ((i = 0 ; i < 2 ; i++)); do
@@ -238,12 +262,13 @@ for ((i = 0 ; i < 2 ; i++)); do
 	rm -rf "s_${part[$i]}.img"
 	rm -rf "$bro/${part[$i]}.new.dat"
 done
-
 if [ -d $bro/META-INF ]; then
 	echo "- Zipping"
 	cp "$dir/bin/vbmeta.img" $bro
-	[ -f ./MIUI_VIETSUB.zip ] && rm -rf ./MIUI_VIETSUB.zip
-	$bin/7za a -tzip "$dir/MIUI_VIETSUB.zip" $bro/*  
+	[ -f ./"vietsub_$input" ] && rm -rf ./"vietsub_$input"
+  for file in $bro; do
+  ( cd "$file" && zip -r ../"vietsub_$input" . )
+  done
 fi
 
 
@@ -271,6 +296,8 @@ mount
 ###############
 debloat
 vietsub
+buildprop
+#read -p "Press [Enter] key to start modify..."
 umount
 shrink
 remove_source
