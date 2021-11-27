@@ -25,7 +25,6 @@ data-app/MIUIYoupin
 data-app/ThirdAppAssistant
 data-app/VirtualSim
 data-app/MIUICleanMaster
-app/SogouInput
 app/MIUISecurityInputMethod
 app/Joyose
 app/PowerKeeper
